@@ -1,0 +1,11 @@
+{
+  "name": "imgaudit",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "setup": "playwright install chromium",
+    "start": "node server.js",
+    "audit": "node analyze.js"
+  },
+  "dependencies": { "playwright": "^1.49.0", "sharp": "^0.33.5", "fflate": "^0.8.2" }
+}

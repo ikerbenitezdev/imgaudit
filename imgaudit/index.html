@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ImgAudit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F1F4F6;--panel:#fff;--fg:#13222D;--mut:#5C6B77;--line:#D9E0E5;--acc:#0B6E8A;--accfg:#fff;--hi:#B3261E;--md:#9A5B00;--lo:#5C6B77;--ok:#23704A}
+@media(prefers-color-scheme:dark){:root{--bg:#0F171D;--panel:#16212A;--fg:#E6EDF2;--mut:#93A3B0;--line:#26343F;--acc:#4DB6D3;--accfg:#06222B;--hi:#FF8A80;--md:#FFC266;--lo:#93A3B0;--ok:#6FD39B}}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.5 "Instrument Sans",system-ui,sans-serif;background:var(--bg);color:var(--fg);padding-bottom:88px}
+.wrap{max-width:1040px;margin:0 auto;padding:32px 20px}
+h1{font-size:28px;line-height:1.15;margin:0 0 4px;letter-spacing:-.02em}
+.mut{color:var(--mut)}
+form{display:grid;grid-template-columns:1fr 200px 200px auto;gap:8px;margin:24px 0 32px}
+input,select,button{font:inherit;padding:11px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--fg)}
+button{cursor:pointer}button.pri{background:var(--acc);color:var(--accfg);border-color:var(--acc);font-weight:600}
+button:disabled{opacity:.5;cursor:default}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.sum{display:grid;grid-template-columns:1.4fr 1fr;gap:24px;align-items:end;padding:24px;background:var(--panel);border:1px solid var(--line);border-radius:12px}
+.big{font-size:44px;line-height:1;font-weight:700;letter-spacing:-.03em;color:var(--acc)}
+.stats{display:flex;gap:24px;justify-content:flex-end;flex-wrap:wrap}.stats b{display:block;font-size:22px}
+.tools{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:24px 0 12px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;border-radius:0;background:var(--panel)}.seg button[aria-pressed=true]{background:var(--fg);color:var(--bg)}
+.tools label{display:flex;gap:6px;align-items:center}.sp{flex:1}
+.row{display:grid;grid-template-columns:28px 280px 1fr;gap:16px;padding:16px;margin-bottom:8px;background:var(--panel);border:1px solid var(--line);border-radius:10px}
+.cmp{display:flex;gap:8px}.cmp figure{margin:0;flex:1;min-width:0}
+.cmp img{width:100%;aspect-ratio:1;object-fit:contain;background:var(--bg);border-radius:6px;display:block}
+.cmp select{padding:3px 6px;font-size:12px;margin-top:4px}
+.cmp figcaption{font-size:12px;margin-top:4px}.cmp .new figcaption{color:var(--ok);font-weight:600}
+.meta{display:flex;gap:8px;flex-wrap:wrap;align-items:baseline;margin-bottom:6px}
+.role{font-weight:600}.url{font-size:12px;color:var(--mut);word-break:break-all}
+ul{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:4px}li{font-size:14px}
+.b{display:inline-block;min-width:48px;text-align:center;font-size:12px;font-weight:600;border-radius:4px;padding:0 6px;margin-right:8px;border:1px solid currentColor}
+.why{margin:2px 0 4px 56px;font-size:13px;color:var(--mut)}.why summary{cursor:pointer;width:max-content}.why p{margin:4px 0 0;max-width:62ch}
+.alta{color:var(--hi)}.media{color:var(--md)}.baja{color:var(--lo)}.good{color:var(--ok)}
+.bar{flex-wrap:wrap;position:fixed;left:0;right:0;bottom:0;background:var(--panel);border-top:1px solid var(--line);padding:12px 20px;display:flex;gap:12px;align-items:center;justify-content:center}
+.bar[hidden]{display:none}
+.spin{width:18px;height:18px;border:2px solid var(--line);border-top-color:var(--acc);border-radius:50%;display:inline-block;vertical-align:-4px;margin-right:8px;animation:s 1s linear infinite}
+@keyframes s{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){.spin{animation:none}}
+@media(max-width:760px){form,.sum{grid-template-columns:1fr}.stats{justify-content:flex-start}.row{grid-template-columns:24px 1fr}.row .info{grid-column:1/-1}.big{font-size:36px}}
+</style></head><body><div class="wrap">
+<h1>ImgAudit</h1><p class="mut">Revisa el peso, el formato y la proporción de las imágenes de tu web y descarga las versiones optimizadas.</p>
+<form id="f"><input id="url" type="url" placeholder="https://tuweb.com" aria-label="URL de la web" required>
+<select id="profile" aria-label="Tipo de web"></select><select id="modo" aria-label="Calidad"><option value="">Calidad: automática</option><option value="maxima">Máxima (casi sin pérdida)</option><option value="alta">Alta</option><option value="ligera">Ligera (más ahorro)</option></select><button class="pri" id="go">Auditar</button></form>
+<div id="out" aria-live="polite"></div></div>
+<div class="bar" id="bar" hidden><span id="barTxt"></span><button id="cp">Copiar prompt para tu IA</button><button class="pri" id="dl">Descargar ZIP</button></div>
+<script>
+const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const kb=n=>n>=1024?(n/1024).toFixed(1).replace('.',',')+' MB':Math.round(n)+' KB';
+const SEV={alta:'Alta',media:'Media',baja:'Baja'};
+const GLOSS=[
+[/^Pesa/,'Una imagen pesada tarda más en descargarse, sobre todo en móvil con datos. Cada tipo de imagen tiene un peso razonable; el límite es orientativo y puedes ajustarlo en profiles.json.'],
+[/^Formato/,'JPEG, PNG y GIF son formatos antiguos. WebP guarda la misma imagen con bastante menos peso y lo soportan todos los navegadores actuales.'],
+[/^Sobredimensionada/,'La imagen tiene más píxeles de los que se llegan a ver. En pantallas retina basta con el doble del ancho mostrado; lo demás se descarga sin aportar nada.'],
+[/^Distorsionada/,'La imagen se estira o se aplasta porque su proporción no coincide con el hueco, y se ve deformada. Se arregla con una imagen de la proporción correcta o con object-fit: cover.'],
+[/^Recorte/,'El navegador corta parte de la imagen para llenar el hueco (object-fit: cover). Si corta mucho, puede quedar fuera lo importante, como una cara o el producto.'],
+[/^Proporción/,'La proporción (ancho:alto) no es habitual para este tipo de imagen. No es grave, pero proporciones coherentes hacen que la web se vea más ordenada.'],
+[/width\/height/,'CLS (Cumulative Layout Shift) mide cuánto se mueve el contenido mientras la página carga. Sin width y height el navegador no sabe cuánto espacio reservar y el texto salta cuando llega la imagen. Google lo mide como parte de Core Web Vitals.'],
+[/srcset/,'srcset ofrece varias versiones de la misma imagen para que el navegador elija la más pequeña que le sirva. Sin él, un móvil descarga la misma imagen grande que un ordenador.'],
+[/principal tiene loading/,'La imagen principal es lo que más cuenta para la sensación de velocidad (LCP, Largest Contentful Paint). Con loading="lazy" el navegador la retrasa a propósito; debe cargar cuanto antes.'],
+[/Fuera de pantalla/,'Con loading="lazy" las imágenes que aún no se ven solo se descargan cuando el usuario se acerca. Ahorra datos y acelera la primera carga.'],
+[/animada/,'Un GIF animado suele pesar muchísimo. Un vídeo MP4 o WebM en bucle, sin sonido, se ve igual y pesa una fracción.']];
+const why=m=>{const g=GLOSS.find(x=>x[0].test(m));return g?`<details class="why"><summary>¿Qué significa?</summary><p>${g[1]}</p></details>`:''};
+let data,tab='desktop',only=false,sel=new Set();
+fetch('/api/profiles').then(r=>r.json()).then(p=>$('#profile').innerHTML=p.map(x=>`<option value="${x.id}">${esc(x.label)}</option>`).join(''));
+
+const row=i=>{const o=i.optimizada,ok=o?.descargable,base=`/api/job/${data.jobId}/${i.id}`,v=o?`${o.modo}-${o.calidad}-${o.pesoKb}`:'';
+ return `<div class="row"><div>${ok?`<input type="checkbox" class="pick" data-id="${i.id}" aria-label="Seleccionar" ${sel.has(i.id)?'checked':''}>`:''}</div>
+ <div class="cmp"><figure><a href="${ok?base+'/original':esc(i.url)}" target="_blank" rel="noopener"><img loading="lazy" alt="Original" src="${ok?base+'/original':esc(i.url)}"></a><figcaption>Original · ${kb(i.pesoKb)}</figcaption></figure>
+ ${ok?`<figure class="new"><a href="${base}/optimized?v=${v}" target="_blank"><img loading="lazy" alt="WebP" src="${base}/optimized?v=${v}"></a><figcaption>WebP · ${kb(o.pesoKb)} (−${o.ahorroPct} %) · fidelidad ${o.similitud} %<br><select class="q" data-id="${i.id}" aria-label="Calidad de esta imagen">${['maxima','alta','ligera'].map(m=>`<option value="${m}" ${o.modo===m?'selected':''}>${{maxima:'Máxima',alta:'Alta',ligera:'Ligera'}[m]}</option>`).join('')}</select></figcaption></figure>`:''}</div>
+ <div class="info"><div class="meta"><span class="role">${i.rol}</span><span class="mut">${i.natural.join('×')} px, mostrada a ${i.mostrada.join('×')}</span><span class="mut">${esc(i.formato)}</span></div>
+ <div class="url">${esc(i.url)}</div>
+ <ul>${i.problemas.map(p=>`<li><span class="b ${p.sev}">${SEV[p.sev]}</span>${esc(p.msg)}${why(p.msg)}</li>`).join('')||'<li class="good">Sin problemas detectados</li>'}</ul></div></div>`};
+
+function render(){const r=data[tab],list=r.imagenes.filter(i=>!only||i.veredicto==='optimizable');
+ const pct=r.totalKb?Math.round(r.ahorroPotencialKb/r.totalKb*100):0,alta=r.imagenes.filter(i=>i.problemas.some(p=>p.sev==='alta')).length;
+ $('#out').innerHTML=`<div class="sum"><div><div class="mut">Ahorro potencial en ${tab==='desktop'?'escritorio':'móvil'}</div><div class="big">${kb(r.ahorroPotencialKb)} <span style="font-size:20px">(${pct} %)</span></div></div>
+ <div class="stats"><div><b>${r.imagenes.length}</b>imágenes</div><div><b>${kb(r.totalKb)}</b>peso total</div><div><b class="${alta?'alta':'good'}">${alta}</b>con problemas altos</div></div></div>
+ ${r.avisos.map(a=>`<p class="media">${esc(a)}</p>`).join('')}
+ <p class="mut" style="font-size:13px">Fidelidad: cuánto se parece el WebP al original (100 % = idéntico). Por encima del 97 % la diferencia no suele notarse. Si una imagen no te convence, sube su calidad con el selector bajo la miniatura.</p>
+ <div class="tools"><div class="seg"><button data-tab="desktop" aria-pressed="${tab==='desktop'}">Escritorio</button><button data-tab="mobile" aria-pressed="${tab==='mobile'}">Móvil</button></div>
+ <label><input type="checkbox" id="only" ${only?'checked':''}> Solo optimizables</label><span class="sp"></span><button id="all">Seleccionar todas las optimizables</button></div>
+ ${list.map(row).join('')||'<p class="mut">No hay imágenes que mostrar.</p>'}`;bar()}
+
+function bar(){const items=data[tab].imagenes.filter(i=>sel.has(i.id)),s=items.reduce((a,i)=>a+i.pesoKb-i.optimizada.pesoKb,0);
+ $('#bar').hidden=!items.length;$('#barTxt').textContent=`${items.length} seleccionadas · ahorras ${kb(s)}`}
+
+async function audit(e){e.preventDefault();$('#go').disabled=true;sel.clear();$('#bar').hidden=true;
+ $('#out').innerHTML='<p class="mut"><span class="spin"></span>Analizando en escritorio y móvil (30-90 s)…</p>';
+ try{const r=await fetch('/api/analyze',{method:'POST',body:JSON.stringify({url:$('#url').value,profile:$('#profile').value,modo:$('#modo').value||undefined})});
+  const d=await r.json();if(d.error)throw Error(d.error);data=d;render()}
+ catch(err){$('#out').innerHTML=`<p class="alta">${esc(err.message)}</p>`}finally{$('#go').disabled=false}}
+
+async function download(){const b=$('#dl');b.disabled=true;b.textContent='Preparando…';
+ try{const r=await fetch('/api/zip',{method:'POST',body:JSON.stringify({job:data.jobId,ids:[...sel]})});
+  if(!r.ok)throw Error((await r.json()).error);const a=document.createElement('a');a.href=URL.createObjectURL(await r.blob());a.download='imagenes-optimizadas.zip';a.click()}
+ catch(err){alert(err.message)}finally{b.disabled=false;b.textContent='Descargar ZIP'}}
+
+async function copyPrompt(){const b=$('#cp');
+ try{const r=await fetch('/api/prompt',{method:'POST',body:JSON.stringify({job:data.jobId,ids:[...sel]})});const d=await r.json();if(d.error)throw Error(d.error);
+  await navigator.clipboard.writeText(d.prompt);b.textContent='¡Copiado!';setTimeout(()=>b.textContent='Copiar prompt para tu IA',2000)}catch(err){alert(err.message)}}
+$('#cp').onclick=copyPrompt;$('#f').onsubmit=audit;$('#dl').onclick=download;
+$('#out').addEventListener('click',e=>{const t=e.target.closest('[data-tab]');if(t){tab=t.dataset.tab;sel.clear();render()}
+ if(e.target.id==='all'){data[tab].imagenes.filter(i=>i.optimizada?.descargable).forEach(i=>sel.add(i.id));render()}});
+$('#out').addEventListener('change',async e=>{
+ if(e.target.classList.contains('q')){const id=e.target.dataset.id;e.target.disabled=true;
+  try{const r=await fetch('/api/requality',{method:'POST',body:JSON.stringify({job:data.jobId,id,modo:e.target.value})});const d=await r.json();if(d.error)throw Error(d.error);
+   const i=data[tab].imagenes.find(x=>x.id===id);i.optimizada={...i.optimizada,...d};render()}catch(err){alert(err.message);e.target.disabled=false}return}if(e.target.id==='only'){only=e.target.checked;render()}
+ if(e.target.classList.contains('pick')){e.target.checked?sel.add(e.target.dataset.id):sel.delete(e.target.dataset.id);bar()}});
+</script></body></html>

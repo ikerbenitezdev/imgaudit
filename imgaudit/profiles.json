@@ -1,0 +1,19 @@
+{
+  "_base": {
+    "modo": "alta",
+    "roles": {
+      "hero": { "ratios": ["16:9", "21:9", "3:1"], "maxKb": 200 },
+      "tarjeta": { "ratios": ["1:1", "4:3", "3:2", "4:5", "16:9"], "maxKb": 50 },
+      "contenido": { "maxKb": 120 },
+      "miniatura": { "maxKb": 20 },
+      "avatar": { "maxKb": 10 },
+      "logo": { "maxKb": 15 },
+      "fondo": { "maxKb": 150 }
+    }
+  },
+  "ecommerce": { "label": "E-commerce", "roles": { "tarjeta": { "ratios": ["1:1", "4:5", "3:4"], "maxKb": 50 } } },
+  "portfolio": { "label": "Portfolio / fotografía", "modo": "maxima", "roles": { "hero": { "maxKb": 350 }, "tarjeta": { "ratios": ["1:1", "4:3", "3:2", "4:5", "3:4", "2:3"], "maxKb": 90 }, "contenido": { "maxKb": 300 } } },
+  "blog": { "label": "Blog / editorial", "roles": { "tarjeta": { "ratios": ["16:9", "3:2", "4:3"], "maxKb": 60 } } },
+  "landing": { "label": "Landing de conversión", "roles": { "hero": { "maxKb": 150 }, "tarjeta": { "maxKb": 40 } } },
+  "saas": { "label": "SaaS", "roles": { "tarjeta": { "ratios": ["4:3", "16:9", "1:1"], "maxKb": 50 }, "contenido": { "maxKb": 150 } } }
+}
