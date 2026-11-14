@@ -50,6 +50,7 @@ export default function Tool() {
   const [err, setErr] = useState('');
   const [prog, setProg] = useState({ pct: 0, label: 'Preparando el análisis', detail: '' });
   const [seconds, setSeconds] = useState(0);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     fetch(`${API}/profiles`).then((r) => r.json()).then(setProfiles).catch(() => setErr('No se puede conectar con el servidor de análisis. ¿Está arrancado (npm start en imgaudit)?'));
@@ -73,7 +74,7 @@ export default function Tool() {
     if (!r.ok) throw new Error((await r.json()).error);
     const a = document.createElement('a'); a.href = URL.createObjectURL(await r.blob()); a.download = 'imagenes-optimizadas.zip'; a.click();
   });
-  const copy = () => run('copy', async () => { await navigator.clipboard.writeText((await post('prompt', { job: data.jobId, ids: [...sel] })).prompt); setBusy('copied'); setTimeout(() => setBusy(''), 1800); });
+  const copy = () => run('copy', async () => { await navigator.clipboard.writeText((await post('prompt', { job: data.jobId, ids: [...sel] })).prompt); setCopied(true); setTimeout(() => setCopied(false), 1800); });
   const toggle = (id) => setSel((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
 
   const r = data?.[tab];
@@ -174,7 +175,7 @@ export default function Tool() {
       {chosen.length > 0 && (
         <div className="fixed inset-x-0 bottom-0 flex flex-wrap items-center justify-center gap-3 border-t border-line bg-white px-5 py-3">
           <span>{chosen.length} seleccionadas · ahorras {kb(saved)}</span>
-          <button onClick={copy} className="rounded-lg border border-line px-4 py-2 hover:border-ink">{busy === 'copied' ? '¡Copiado!' : 'Copiar prompt para tu IA'}</button>
+          <button onClick={copy} className="rounded-lg border border-line px-4 py-2 hover:border-ink">{copied ? '¡Copiado!' : 'Copiar prompt para tu IA'}</button>
           <button onClick={zip} disabled={busy === 'zip'} className="rounded-lg bg-teal px-5 py-2 font-semibold text-white hover:bg-ink disabled:opacity-50">{busy === 'zip' ? 'Preparando…' : 'Descargar ZIP'}</button>
         </div>
       )}
