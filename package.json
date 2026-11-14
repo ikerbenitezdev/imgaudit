@@ -1,0 +1,11 @@
+{
+  "name": "imgaudit-repo",
+  "private": true,
+  "license": "MIT",
+  "description": "Atajos para instalar y arrancar ImgAudit (analizador + web) con un solo comando",
+  "scripts": {
+    "setup": "npm --prefix imgaudit install && npm --prefix imgaudit-web install && npm --prefix imgaudit run setup",
+    "dev": "concurrently -k -n api,web -c blue,green \"npm --prefix imgaudit start\" \"npm --prefix imgaudit-web run dev\""
+  },
+  "devDependencies": { "concurrently": "^9.0.0" }
+}

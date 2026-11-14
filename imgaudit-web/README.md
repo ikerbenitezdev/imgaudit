@@ -1,14 +1,14 @@
 # ImgAudit Web (Next.js + Tailwind)
 
-La home es la herramienta: título, formulario y resultados. El análisis lo hace `imgaudit` (Playwright + Sharp), que Next reenvía vía `/api/engine/*`.
+La interfaz de ImgAudit: la home es la propia herramienta (formulario, progreso y resultados). El análisis lo hace el analizador de `../imgaudit`, al que la web llama a través de `/api/engine/*` (configurado en `next.config.mjs`).
 
-## Arrancar en local
-1. En `imgaudit/`: `npm install && npm run setup && npm start`  (puerto 4000)
-2. Aquí: `cp .env.example .env.local`, `npm install`, `npm run dev`  (puerto 3000)
+Las instrucciones para ponerlo todo en marcha están en el [README principal](../README.md).
 
-## Medir visitas
-Pon tu dominio en `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` para activar Plausible (sin cookies). Vercel Analytics o Umami también sirven.
+## Variables de entorno (opcionales)
+Copia `.env.example` a `.env.local` solo si necesitas cambiar algo.
 
-## Antes de publicar
-- Despliegue del analizador en Coolify con límites de recursos: ver `imgaudit/DEPLOY.md`.
-- Más adelante, si quieres cobrar: Stripe + login (se quitó de esta versión).
+| Variable | Para qué |
+|---|---|
+| `ANALYZER_URL` | Dónde está el analizador para el reenvío local (por defecto `http://localhost:4000`) |
+| `NEXT_PUBLIC_ANALYZER_URL` | Si el analizador está en otra dirección pública, la web la llama directamente. Déjala vacía en local |
+| `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` | Activa la analítica de visitas de Plausible (sin cookies) |
